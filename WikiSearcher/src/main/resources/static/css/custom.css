@@ -1,0 +1,25 @@
+input[type="text"]::placeholder {
+    text-align: center;
+}
+
+.vh-50 {
+  height: 50vh;
+}
+
+.vh-75 {
+  height: 75vh;
+}
+
+.search-result {
+    padding: 20px;
+    width: 85%;
+}
+
+#search-results {
+    padding-top: 50px;
+    padding-left: 100px;
+}
+
+.hidden {
+    display: none!important;
+}
