@@ -3,20 +3,20 @@ package com.wikisearchengine.wikisearcher.model;
 import java.util.List;
 
 public class SearchResponse {
-    private long size;
+    private long total;
     private List<SearchResult> results;
 
-    public SearchResponse(long size, List<SearchResult> results) {
-        this.size = size;
+    public SearchResponse(long total, List<SearchResult> results) {
+        this.total = total;
         this.results = results;
     }
 
-    public long getSize() {
-        return size;
+    public long getTotal() {
+        return total;
     }
 
-    public void setSize(long size) {
-        this.size = size;
+    public void setTotal(long total) {
+        this.total = total;
     }
 
     public List<SearchResult> getResults() {

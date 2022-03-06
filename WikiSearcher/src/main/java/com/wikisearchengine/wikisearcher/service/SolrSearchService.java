@@ -53,6 +53,7 @@ public class SolrSearchService implements SearchService{
 
 
             final QueryResponse response = solrClient.query(enWikiCollectionName, queryParams);
+
             final SolrDocumentList documents = response.getResults();
 
             List<SearchResult> results = new ArrayList<>();
@@ -64,7 +65,7 @@ public class SolrSearchService implements SearchService{
                 final Date date = (Date) document.getFirstValue("date_dt");
                 results.add(new SearchResult(title, url, body, SOLR_DATE_FORMAT.format(date.toInstant())));
             }
-            return new SearchResponse(results.size(), results);
+            return new SearchResponse(documents.getNumFound(), results);
         }catch (Exception e){
             throw new RuntimeException("An unexpected error occurred.", e);
         }

@@ -6,7 +6,8 @@ import org.springframework.context.annotation.ComponentScan;
 
 @ComponentScan(basePackages = "com.wikisearchengine")
 @SpringBootApplication
-public class SearchServiceApplication {
+public class
+SearchServiceApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(SearchServiceApplication.class, args);
