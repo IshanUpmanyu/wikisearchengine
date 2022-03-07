@@ -1,7 +1,13 @@
 const MAX_RESULTS_PER_PAGE = 10;
+var paginationState = {
+                        start: 1,
+                        current: 1,
+                        last: 10
+                      };
+var searchQuery = "";
 $(document).ready(function () {
     $("#home-search-btn").click(function(e) {
-        const searchQuery = $("#home-search-bar").val();
+        searchQuery = $("#home-search-bar").val();
         if(searchQuery.length !== 0){
             $("#home-search-btn").closest("#home-page").toggleClass("hidden");
             $("#search-results-page").toggleClass("hidden");
@@ -21,14 +27,14 @@ $(document).ready(function () {
                         traditional: true,
                         success: function (searchResponse) {
                             updateSearchResults(searchResponse);
-                            updatePagination(searchResponse.total);
+                            updatePagination(searchResponse.total, 1, 1);
                         }
             });
         }
     });
 
     $("#search-results-search-btn").click(function(e) {
-        const searchQuery = $("#search-results-page-search-bar").val();
+        searchQuery = $("#search-results-page-search-bar").val();
         if(searchQuery.length !== 0){
             const searchRequest = {
                 query: searchQuery,
@@ -46,33 +52,45 @@ $(document).ready(function () {
                         traditional: true,
                         success: function (searchResponse) {
                             updateSearchResults(searchResponse);
-                            updatePagination(searchResponse.total);
+                            updatePagination(searchResponse.total, 1, 1);
                         }
             });
         }
     });
 
-    function updatePagination(total){
+    function updatePagination(total, start, current){
         $("#pagination").empty();
         var numOfPages = total / MAX_RESULTS_PER_PAGE + 1;
-        let i = 1;
-        for(; i <= numOfPages; i++){
-            const pageNumber = '<div class="p-2"><a class = "pagination-link" href="#" page='+i+'>'+i+'</a></div>'
-            $("#pagination").append(pageNumber);
-            if( i >= 10){
-                break;
+        let i = start;
+        var firstPage = '<li class="page-item disabled"><a class="page-link" href="#" tabindex="-1">Previous</a></li>'
+        if(start > 1){
+            firstPage = '<li class="page-item"><a class="page-link" href="#" tabindex="-1" page="previous">Previous</a></li>'
+        }
+        $("#pagination").append(firstPage);
+        for(; i <= numOfPages && i < start + 10; i++){
+            var pageNumber = '<li class="page-item"><a class = "page-link" href="#" page="'+i+'">'+i+'</a></li>'
+            if(i == current){
+                pageNumber = '<li class="page-item active "><a class = "page-link" href="#" page="'+i+'">'+i+'</a></li>'
             }
+            $("#pagination").append(pageNumber);
         }
-        if( numOfPages > 10){
-            const next = '<div class="p-2 "><a class = "pagination-link" href="#" page='+i+'>next</a></div>'
-            $("#pagination").append(next);
+        paginationState.last = i-1;
+        paginationState.start = start;
+        paginationState.current = current;
+        var lastPage = null;
+        if( numOfPages - start + 1 > 10){
+            lastPage = '<li class="page-item"><a class = "page-link" href="#" page="next">next</a></li>'
+        }else{
+            lastPage = '<li class="page-item disabled"><a class = "page-link" href="#" page='+i+'>next</a></li>'
         }
+        $("#pagination").append(lastPage);
     }
 
     function updateSearchResults(searchResponse){
         const total = searchResponse.total;
         const results = searchResponse.results;
         $("#search-results").empty();
+        $("#search-results").append('<p style="padding-left: 20px;">Found '+total+' results. </p>')
         results.forEach(addSearchResult)
     }
 
@@ -89,11 +107,67 @@ $(document).ready(function () {
 
     }
 
-    $(document).on("click", "a[class=pagination-link]", function(e) {
+    $(document).on("click", "a[class=page-link]", function(e) {
         //this == the link that was clicked
         e.preventDefault();
         var page = $(this).attr("page");
-        alert("You're trying to go to page" + page);
+
+        if(page == "next"){
+           const searchRequest = {
+                query: searchQuery,
+                pageNum: paginationState.last + 1,
+                resultsPerPage: MAX_RESULTS_PER_PAGE
+           };
+
+            $.ajax({
+                        type: 'post',
+                        url: 'wikisearcher/search',
+                        data: JSON.stringify(searchRequest),
+                        contentType: "application/json; charset=utf-8",
+                        traditional: true,
+                        success: function (searchResponse) {
+                            updateSearchResults(searchResponse);
+                            updatePagination(searchResponse.total, paginationState.last + 1, paginationState.last + 1);
+                        }
+            });
+
+        }else if(page == "previous"){
+            const searchRequest = {
+                query: searchQuery,
+                pageNum: paginationState.last - 10,
+                resultsPerPage: MAX_RESULTS_PER_PAGE
+            };
+
+            $.ajax({
+                        type: 'post',
+                        url: 'wikisearcher/search',
+                        data: JSON.stringify(searchRequest),
+                        contentType: "application/json; charset=utf-8",
+                        traditional: true,
+                        success: function (searchResponse) {
+                            updateSearchResults(searchResponse);
+                            updatePagination(searchResponse.total, paginationState.start - 10, paginationState.start - 10);
+                        }
+            });
+        }else{
+            const searchRequest = {
+                query: searchQuery,
+                pageNum: page - 1,
+                resultsPerPage: MAX_RESULTS_PER_PAGE
+            };
+
+            $.ajax({
+                        type: 'post',
+                        url: 'wikisearcher/search',
+                        data: JSON.stringify(searchRequest),
+                        contentType: "application/json; charset=utf-8",
+                        traditional: true,
+                        success: function (searchResponse) {
+                            updateSearchResults(searchResponse);
+                            updatePagination(searchResponse.total, paginationState.start, page);
+                        }
+            });
+        }
     });
 });
 
