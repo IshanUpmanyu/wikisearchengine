@@ -56,7 +56,7 @@ $(document).ready(function () {
         const results = searchResponse.results;
         $("#search-results").empty();
         $("#search-results").append('<p style="padding-left: 20px;">Found '+total+' results. </p>')
-         $("#pagination").empty();
+        $("#pagination").empty();
         results.forEach(addSearchResult)
     }
 
@@ -76,7 +76,8 @@ $(document).ready(function () {
     function reloadSearchResults(page, paginationStart, currentPage){
             $("#search-results-page-search-bar").val(searchQuery);
             $("#search-results").empty();
-            $("#search-results").append('<p class="d-flex justify-content-center">Loading results... </p>')
+            $("#search-results").append('<p class="d-flex justify-content-center">Loading results... </p>');
+            $("#pagination").empty();
             const searchRequest = {
                 query: searchQuery,
                 pageNum: page,
