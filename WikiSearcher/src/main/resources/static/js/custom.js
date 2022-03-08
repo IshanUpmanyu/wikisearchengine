@@ -11,50 +11,15 @@ $(document).ready(function () {
         if(searchQuery.length !== 0){
             $("#home-search-btn").closest("#home-page").toggleClass("hidden");
             $("#search-results-page").toggleClass("hidden");
-            const searchRequest = {
-                query: searchQuery,
-                pageNum: 0,
-                resultsPerPage: MAX_RESULTS_PER_PAGE
-            };
 
-            $("#search-results-page-search-bar").val(searchQuery);
-
-            $.ajax({
-                        type: 'post',
-                        url: 'wikisearcher/search',
-                        data: JSON.stringify(searchRequest),
-                        contentType: "application/json; charset=utf-8",
-                        traditional: true,
-                        success: function (searchResponse) {
-                            updateSearchResults(searchResponse);
-                            updatePagination(searchResponse.total, 1, 1);
-                        }
-            });
+            reloadSearchResults(0, 1, 1);
         }
     });
 
     $("#search-results-search-btn").click(function(e) {
         searchQuery = $("#search-results-page-search-bar").val();
         if(searchQuery.length !== 0){
-            const searchRequest = {
-                query: searchQuery,
-                pageNum: 0,
-                resultsPerPage: MAX_RESULTS_PER_PAGE
-            };
-
-            $("#search-results-page-search-bar").val(searchQuery);
-
-            $.ajax({
-                        type: 'post',
-                        url: 'wikisearcher/search',
-                        data: JSON.stringify(searchRequest),
-                        contentType: "application/json; charset=utf-8",
-                        traditional: true,
-                        success: function (searchResponse) {
-                            updateSearchResults(searchResponse);
-                            updatePagination(searchResponse.total, 1, 1);
-                        }
-            });
+            reloadSearchResults(0, 1, 1);
         }
     });
 
@@ -91,6 +56,7 @@ $(document).ready(function () {
         const results = searchResponse.results;
         $("#search-results").empty();
         $("#search-results").append('<p style="padding-left: 20px;">Found '+total+' results. </p>')
+         $("#pagination").empty();
         results.forEach(addSearchResult)
     }
 
@@ -107,66 +73,43 @@ $(document).ready(function () {
 
     }
 
+    function reloadSearchResults(page, paginationStart, currentPage){
+            $("#search-results-page-search-bar").val(searchQuery);
+            $("#search-results").empty();
+            $("#search-results").append('<p class="d-flex justify-content-center">Loading results... </p>')
+            const searchRequest = {
+                query: searchQuery,
+                pageNum: page,
+                resultsPerPage: MAX_RESULTS_PER_PAGE
+            };
+
+            $.ajax({
+                        type: 'post',
+                        url: 'wikisearcher/search',
+                        data: JSON.stringify(searchRequest),
+                        contentType: "application/json; charset=utf-8",
+                        traditional: true,
+                        success: function (searchResponse) {
+                            updateSearchResults(searchResponse);
+                            updatePagination(searchResponse.total, paginationStart, currentPage);
+                        },
+                        error: function (error) {
+                            $("#search-results").empty();
+                            $("#search-results").append('<p class="d-flex justify-content-center">An unexpected error occurred while trying to fetch results. </p>');
+                        }
+            });
+    }
+
     $(document).on("click", "a[class=page-link]", function(e) {
         //this == the link that was clicked
         e.preventDefault();
         var page = $(this).attr("page");
-
         if(page == "next"){
-           const searchRequest = {
-                query: searchQuery,
-                pageNum: paginationState.last,
-                resultsPerPage: MAX_RESULTS_PER_PAGE
-           };
-
-            $.ajax({
-                        type: 'post',
-                        url: 'wikisearcher/search',
-                        data: JSON.stringify(searchRequest),
-                        contentType: "application/json; charset=utf-8",
-                        traditional: true,
-                        success: function (searchResponse) {
-                            updateSearchResults(searchResponse);
-                            updatePagination(searchResponse.total, paginationState.last + 1, paginationState.last + 1);
-                        }
-            });
-
+           reloadSearchResults(paginationState.last, paginationState.last + 1, paginationState.last + 1);
         }else if(page == "previous"){
-            const searchRequest = {
-                query: searchQuery,
-                pageNum: paginationState.last - 11,
-                resultsPerPage: MAX_RESULTS_PER_PAGE
-            };
-
-            $.ajax({
-                        type: 'post',
-                        url: 'wikisearcher/search',
-                        data: JSON.stringify(searchRequest),
-                        contentType: "application/json; charset=utf-8",
-                        traditional: true,
-                        success: function (searchResponse) {
-                            updateSearchResults(searchResponse);
-                            updatePagination(searchResponse.total, paginationState.start - 10, paginationState.last-10);
-                        }
-            });
+           reloadSearchResults(paginationState.last - 11, paginationState.start - 10, paginationState.last-10)
         }else{
-            const searchRequest = {
-                query: searchQuery,
-                pageNum: page - 1,
-                resultsPerPage: MAX_RESULTS_PER_PAGE
-            };
-
-            $.ajax({
-                        type: 'post',
-                        url: 'wikisearcher/search',
-                        data: JSON.stringify(searchRequest),
-                        contentType: "application/json; charset=utf-8",
-                        traditional: true,
-                        success: function (searchResponse) {
-                            updateSearchResults(searchResponse);
-                            updatePagination(searchResponse.total, paginationState.start, page);
-                        }
-            });
+           reloadSearchResults(page - 1, paginationState.start, page);
         }
     });
 });
