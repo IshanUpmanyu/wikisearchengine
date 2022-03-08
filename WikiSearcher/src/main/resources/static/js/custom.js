@@ -115,7 +115,7 @@ $(document).ready(function () {
         if(page == "next"){
            const searchRequest = {
                 query: searchQuery,
-                pageNum: paginationState.last + 1,
+                pageNum: paginationState.last,
                 resultsPerPage: MAX_RESULTS_PER_PAGE
            };
 
@@ -134,7 +134,7 @@ $(document).ready(function () {
         }else if(page == "previous"){
             const searchRequest = {
                 query: searchQuery,
-                pageNum: paginationState.last - 10,
+                pageNum: paginationState.last - 11,
                 resultsPerPage: MAX_RESULTS_PER_PAGE
             };
 
@@ -146,7 +146,7 @@ $(document).ready(function () {
                         traditional: true,
                         success: function (searchResponse) {
                             updateSearchResults(searchResponse);
-                            updatePagination(searchResponse.total, paginationState.start - 10, paginationState.start - 10);
+                            updatePagination(searchResponse.total, paginationState.start - 10, paginationState.last-10);
                         }
             });
         }else{

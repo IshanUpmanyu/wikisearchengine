@@ -21,13 +21,13 @@ resolve_relative_path() (
 script_dir_rel_path=$(dirname "$0")
 echo $script_dir_rel_path
 script_dir=$(resolve_relative_path $script_dir_rel_path)
-conf_folder="$script_dir/../conf"
-log_folder="$script_dir/../logs"
-java_command="java -jar -DCONFIG_PATH=$conf_folder $script_dir/../lib/WikiIndexer-1.0-SNAPSHOT-jar-with-dependencies.jar"
-echo "Starting WikiIndexer..."
-nohup $java_command >> $log_folder/app.log 2>&1 &
+conf_folder="$script_dir/../conf/"
+log_file="$script_dir/../logs/app.log"
+java_command="java -jar  $script_dir/../lib/WikiSearcher-0.0.1-SNAPSHOT.jar --spring.config.location=$conf_folder"
+echo $java_command
+nohup $java_command >> $log_file 2>&1 &
 if [ $? -eq 0 ]; then
-    echo "WikiIndexer started successfully!"
+        echo "WikiSearcher started successfully!"
 else
-    echo "WikiIndexer failed to started check logs!"
+         echo "WikiSearcher failed to start. check logs!"
 fi

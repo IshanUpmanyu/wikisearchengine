@@ -10,9 +10,6 @@
     </formats>
     <fileSets>
         <fileSet>
-            <directory>${project.basedir}/conf</directory>
-        </fileSet>
-        <fileSet>
             <directory>${project.basedir}/bin</directory>
         </fileSet>
         <fileSet>
@@ -21,8 +18,12 @@
     </fileSets>
     <files>
         <file>
-            <source> ${project.build.directory}/${project.artifactId}-${project.version}-jar-with-dependencies.jar</source>
+            <source> ${project.build.directory}/${project.artifactId}-${project.version}.jar</source>
             <outputDirectory>/lib</outputDirectory>
+        </file>
+        <file>
+            <source> ${project.basedir}/src/main/resources/application.properties</source>
+            <outputDirectory>/conf</outputDirectory>
         </file>
     </files>
 </assembly>

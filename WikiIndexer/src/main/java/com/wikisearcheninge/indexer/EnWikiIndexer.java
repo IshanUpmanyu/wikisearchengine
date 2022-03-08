@@ -20,6 +20,7 @@ import java.util.Properties;
 
 public class EnWikiIndexer {
 
+    private static final long FAILURE_THRESHOLD = 1000 ;
     private SolrClient solrClient = null;
 
     private static volatile EnWikiIndexer instance = null;
@@ -69,33 +70,47 @@ public class EnWikiIndexer {
             String collectionName = createCollection();
             long docsIndexed = 1;
             System.out.println("Starting indexing documents.");
+            long startTime = System.currentTimeMillis();
+            long failureCount = 0;
             List<SolrInputDocument> docs = new ArrayList<>();
             while (true) {
                 try {
                     tuple = parser.next();
-                }catch (NoMoreDataException e){
+
+                    String id = cleaner.clean(xmlStartTag + tuple[EnWikiXMLParser.ID] + xmlEndTag);
+                    String body = cleaner.clean(xmlStartTag + tuple[EnWikiXMLParser.BODY] + xmlEndTag);
+                    String date = cleaner.clean(xmlStartTag + parseDateToSolrFormat(tuple[EnWikiXMLParser.DATE]) + xmlEndTag);
+                    String title = cleaner.clean(xmlStartTag + tuple[EnWikiXMLParser.TITLE] + xmlEndTag);
+                    docs.add(createSolrDoc(id, title, body, date));
+                    if(docsIndexed % 500 == 0){
+                        this.solrClient.add(collectionName, docs, 1000);
+                        System.out.println("Indexed "+ docsIndexed+" docs in "+getTimeSinceStart(startTime));
+                        docs.clear();
+                    }
+                    docsIndexed++;
+                }catch (NoMoreDataException nmde){
                     break;
+                } catch (Exception e){
+                    failureCount++;
+                    if(failureCount > FAILURE_THRESHOLD){
+                        throw e;
+                    }
+                    System.out.println("An error occurred while processing record. Failure count increased to: "+ failureCount);
                 }
-                String id = cleaner.clean(xmlStartTag + tuple[EnWikiXMLParser.ID] + xmlEndTag);
-                String body = cleaner.clean(xmlStartTag + tuple[EnWikiXMLParser.BODY] + xmlEndTag);
-                String date = cleaner.clean(xmlStartTag + parseDateToSolrFormat(tuple[EnWikiXMLParser.DATE]) + xmlEndTag);
-                String title = cleaner.clean(xmlStartTag + tuple[EnWikiXMLParser.TITLE] + xmlEndTag);
-                docs.add(createSolrDoc(id, title, body, date));
-                if(docsIndexed % 500 == 0){
-                    this.solrClient.add(collectionName, docs, 1000);
-                    System.out.println("Indexed "+ docsIndexed+" docs.");
-                    docs.clear();
-                }
-                docsIndexed++;
             }
             this.solrClient.add(collectionName, docs, 1000);
             docs.clear();
-            System.out.println("Finished indexing documents. "+ docsIndexed+" documents indexed.");
-
-
+            System.out.println("Finished indexing documents. "+ docsIndexed+" documents indexed in "+getTimeSinceStart(startTime));
         }catch (Exception e){
             throw new RuntimeException("An error occurred while trying to index wiki dump data for file: "+wikiDumpFilePath, e);
         }
+    }
+
+    private String getTimeSinceStart(long startTime) {
+        long currentTime = System.currentTimeMillis();
+        long minutes = (currentTime - startTime)/(1000*60);
+        long seconds = (currentTime - startTime)%(1000*60);
+        return String.format("%d minutes and %d seconds", minutes, seconds);
     }
 
     private SolrInputDocument createSolrDoc(String id, String title, String body, String date){
@@ -109,9 +124,17 @@ public class EnWikiIndexer {
 
     private String createCollection() throws SolrServerException, IOException {
         String collectionName = "en-wikipedia";
-        System.out.println("Creating collection: " + collectionName);
-        CollectionAdminRequest.Create createCollectionRequest = CollectionAdminRequest.createCollection(collectionName, numShards, numReplicas);
-        this.solrClient.request(createCollectionRequest);
+
+        List<String> existingCollections =  CollectionAdminRequest.listCollections(solrClient);
+        if(existingCollections != null && existingCollections.contains(collectionName)){
+            System.out.println("Collection already exists. Will not create again.");
+        }else {
+            System.out.println("Creating collection: " + collectionName);
+            CollectionAdminRequest.Create createCollectionRequest = CollectionAdminRequest.createCollection(collectionName, numShards, numReplicas);
+            this.solrClient.request(createCollectionRequest);
+            System.out.println("Created collection: " + collectionName);
+
+        }
         return collectionName;
     }
 

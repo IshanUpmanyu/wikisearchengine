@@ -45,13 +45,13 @@ public class SolrSearchService implements SearchService{
             }
 
 
-            String solrQuery = buildSolrQueryDismax(query);
             final Map<String, String> queryParamMap = new HashMap<>();
             queryParamMap.put("q", query);
             queryParamMap.put("start", String.valueOf(pageNum * resultsPerPage));
             queryParamMap.put("rows", String.valueOf(resultsPerPage));
             queryParamMap.put("hl", "on");
             queryParamMap.put("hl.fl", "body_t");
+            queryParamMap.put("hl.fragsize", "200");
             queryParamMap.put("defType", "dismax");
             queryParamMap.put("qf", "title_t^20 body_t^0.5");
             MapSolrParams queryParams = new MapSolrParams(queryParamMap);
@@ -108,9 +108,6 @@ public class SolrSearchService implements SearchService{
         return solrQuery.toString();
     }
 
-    private String buildSolrQueryDismax(String query){
-        return String.format("title_t:%s OR body_t:%s", query, query);
-    }
 
 
     @PostConstruct
