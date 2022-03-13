@@ -108,9 +108,10 @@ public class EnWikiIndexer {
 
     private String getTimeSinceStart(long startTime) {
         long currentTime = System.currentTimeMillis();
-        long minutes = (currentTime - startTime)/(1000*60);
-        long seconds = (currentTime - startTime)%(1000*60);
-        return String.format("%d minutes and %d seconds", minutes, seconds);
+        long hours = (currentTime - startTime) / (1000 * 60 *60);
+        long minutes = ((currentTime - startTime)/ (1000 * 60)) % 60;
+        long seconds = ((currentTime - startTime)/(1000)) % 60;
+        return String.format("%d hour and %d minutes and %d seconds",hours, minutes, seconds);
     }
 
     private SolrInputDocument createSolrDoc(String id, String title, String body, String date){
