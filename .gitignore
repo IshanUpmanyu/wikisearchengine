@@ -1,3 +1,4 @@
 .idea/
 *.iml
 target
+WikiSearcher/src/main/resources/static/.DS_Store
