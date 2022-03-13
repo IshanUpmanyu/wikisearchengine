@@ -16,6 +16,29 @@ $(document).ready(function () {
         }
     });
 
+    $('#home-search-bar').on("keypress", function(e) {
+            if (e.keyCode == 13) {
+                searchQuery = $("#home-search-bar").val();
+                if(searchQuery.length !== 0){
+                    $("#home-search-btn").closest("#home-page").toggleClass("hidden");
+                    $("#search-results-page").toggleClass("hidden");
+
+                    reloadSearchResults(0, 1, 1);
+                }
+                return false; // prevent the button click from happening
+            }
+    });
+
+     $('#search-results-page-search-bar').on("keypress", function(e) {
+                if (e.keyCode == 13) {
+                    searchQuery = $("#search-results-page-search-bar").val();
+                    if(searchQuery.length !== 0){
+                        reloadSearchResults(0, 1, 1);
+                    }
+                    return false; // prevent the button click from happening
+                }
+     });
+
     $("#search-results-search-btn").click(function(e) {
         searchQuery = $("#search-results-page-search-bar").val();
         if(searchQuery.length !== 0){
@@ -55,7 +78,7 @@ $(document).ready(function () {
         const total = searchResponse.total;
         const results = searchResponse.results;
         $("#search-results").empty();
-        $("#search-results").append('<p style="padding-left: 20px;">Found '+total+' results. </p>')
+        $("#search-results").append('<p>Found '+total+' results. </p>')
         $("#pagination").empty();
         results.forEach(addSearchResult)
     }
